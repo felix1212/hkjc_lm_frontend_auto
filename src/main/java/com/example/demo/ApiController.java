@@ -1,8 +1,12 @@
+/*
+ *  Change log:
+ *  1.0.3 - Added getRandomNumber() to return a random value for Dynamic Instrumentation testing
+ */
+
 package com.example.demo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +37,8 @@ public class ApiController {
     @GetMapping("/dd/query")
     public ResponseEntity<String> query() {
         logger.info(ddQueryUrl + " called");
+        int randomValue = getRandomNumber();
+        logger.info("Generated random value: {}", randomValue);
         return sendRequest(ddQueryUrl, HttpMethod.GET, null);
     }
 
@@ -42,6 +48,8 @@ public class ApiController {
     @PutMapping("/dd/insert")
     public ResponseEntity<String> insert(@RequestBody String jsonPayload) {
         logger.info(ddInsertUrl + " called");
+        int randomValue = getRandomNumber();
+        logger.info("Generated random value: {}", randomValue);
         return sendRequest(ddInsertUrl, HttpMethod.PUT, jsonPayload);
     }
 
@@ -51,21 +59,40 @@ public class ApiController {
     @PostMapping("/dd/truncate")
     public ResponseEntity<String> truncate() {
         logger.info(ddTruncateUrl + " called");
+        int randomValue = getRandomNumber();
+        logger.info("Generated random value: {}", randomValue);
         return sendRequest(ddTruncateUrl, HttpMethod.POST, null);
     }
 
+    /**
+     * Simulate a 5XX error
+     */
+    @GetMapping("/error")
+    public ResponseEntity<String> generateError() {
+        // Simulate a 500 Internal Server Error
+        return new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+
     private ResponseEntity<String> sendRequest(String url, HttpMethod method, String body) {
-        // Set headers with content type
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        // Create HTTP entity with body and headers
+    
         HttpEntity<String> entity = new HttpEntity<>(body, headers);
-
-        // Make the HTTP request
         ResponseEntity<String> response = restTemplate.exchange(url, method, entity, String.class);
+    
+        // Filter out Transfer-Encoding headers
+        HttpHeaders responseHeaders = new HttpHeaders();
+        for (String headerName : response.getHeaders().keySet()) {
+            if (!headerName.equalsIgnoreCase(HttpHeaders.TRANSFER_ENCODING)) {
+                responseHeaders.put(headerName, response.getHeaders().get(headerName));
+            }
+        }
+    
+        return new ResponseEntity<>(response.getBody(), responseHeaders, response.getStatusCode());
+    }
 
-        // Return the response
-        return response;
+    private int getRandomNumber() {
+        return (int) (Math.random() * 10) + 1;
     }
 }
