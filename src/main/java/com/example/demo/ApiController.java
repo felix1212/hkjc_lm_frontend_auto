@@ -1,6 +1,7 @@
 /*
  *  Change log:
  *  1.0.3 - Added getRandomNumber() to return a random value for Dynamic Instrumentation testing
+ *  1.0.4 - Added /dyninstr endpoint for Dynamic Instrumentation testing
  */
 
 package com.example.demo;
@@ -69,8 +70,22 @@ public class ApiController {
      */
     @GetMapping("/error")
     public ResponseEntity<String> generateError() {
+        logger.info("error endpoint called");
         // Simulate a 500 Internal Server Error
+        int randomValue = getRandomNumber();
+        logger.info("Generated random value: {}", randomValue);
         return new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Simulate Dynamic Instrumentation
+     */
+    @GetMapping("/dyninstr")
+    public boolean dynInstr() {
+        logger.info("dyninstr endpoint called");
+        int randomValue = getRandomNumber();
+        logger.info("Generated random value: {}", randomValue);
+        return true; 
     }
 
 
