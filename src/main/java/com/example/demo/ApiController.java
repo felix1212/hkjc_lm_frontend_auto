@@ -2,6 +2,7 @@
  *  Change log:
  *  1.0.3 - Added getRandomNumber() to return a random value for Dynamic Instrumentation testing
  *  1.0.4 - Added /dyninstr endpoint for Dynamic Instrumentation testing
+ *  1.0.5 - Add latency settings
  */
 
 package com.example.demo;
@@ -32,15 +33,30 @@ public class ApiController {
     @Value("${dd.truncate.url}")
     private String ddTruncateUrl;
 
+    @Value("${query.delay}")
+    private int queryDelay;
+
+    @Value("${insert.delay}")
+    private int insertDelay;
+
+    @Value("${truncate.delay}")
+    private int truncateDelay;
+
     /**
      * Query table via DD backend
      */
     @GetMapping("/dd/query")
     public ResponseEntity<String> query() {
-        logger.info(ddQueryUrl + " called");
-        int randomValue = getRandomNumber();
-        logger.info("Generated random value: {}", randomValue);
-        return sendRequest(ddQueryUrl, HttpMethod.GET, null);
+        try {
+            logger.info(ddQueryUrl + " called with a delay of " + queryDelay + "ms");
+            Thread.sleep(queryDelay);
+            int randomValue = getRandomNumber();
+            logger.info("Generated random value: {}", randomValue);
+            return sendRequest(ddQueryUrl, HttpMethod.GET, null);
+		} catch (Exception e) {
+			logger.error("e");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     /**
@@ -48,10 +64,16 @@ public class ApiController {
      */
     @PutMapping("/dd/insert")
     public ResponseEntity<String> insert(@RequestBody String jsonPayload) {
-        logger.info(ddInsertUrl + " called");
-        int randomValue = getRandomNumber();
-        logger.info("Generated random value: {}", randomValue);
-        return sendRequest(ddInsertUrl, HttpMethod.PUT, jsonPayload);
+        try {
+            logger.info(ddInsertUrl + " called" + insertDelay + "ms");
+            Thread.sleep(insertDelay);
+            int randomValue = getRandomNumber();
+            logger.info("Generated random value: {}", randomValue);
+            return sendRequest(ddInsertUrl, HttpMethod.PUT, jsonPayload);
+		} catch (Exception e) {
+			logger.error("e");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     /**
@@ -59,10 +81,16 @@ public class ApiController {
      */
     @PostMapping("/dd/truncate")
     public ResponseEntity<String> truncate() {
-        logger.info(ddTruncateUrl + " called");
-        int randomValue = getRandomNumber();
-        logger.info("Generated random value: {}", randomValue);
-        return sendRequest(ddTruncateUrl, HttpMethod.POST, null);
+        try {
+            logger.info(ddTruncateUrl + " called" + truncateDelay + "ms");
+            Thread.sleep(truncateDelay);
+            int randomValue = getRandomNumber();
+            logger.info("Generated random value: {}", randomValue);
+            return sendRequest(ddTruncateUrl, HttpMethod.POST, null);
+		} catch (Exception e) {
+			logger.error("e");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     /**
